@@ -194,7 +194,7 @@ Summary: The Linux kernel
 
 %define make_target bzImage
 
-%define KVERREL %{version}-%{release}.%{_target_cpu}
+%define KVERREL %{version}.%{_target_cpu}
 %define hdrarch %_target_cpu
 %define asmarch %_target_cpu
 
@@ -1529,7 +1529,7 @@ BuildKernel() {
       CopyKernel=cp
     fi
 
-    KernelVer=%{version}-%{release}.%{_target_cpu}${Flavour:+.${Flavour}}
+    KernelVer=%{version}.%{_target_cpu}${Flavour:+.${Flavour}}
     echo BUILDING A KERNEL FOR ${Flavour} %{_target_cpu}...
     #linpus mars
     echo ${KernelVer} >	~/rpmbuild/SPECS/KernelVer 
