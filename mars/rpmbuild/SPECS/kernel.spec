@@ -51,7 +51,7 @@ Summary: The Linux kernel
 # For non-released -rc kernels, this will be prepended with "0.", so
 # for example a 3 here will become 0.3
 #
-%global baserelease 7
+%global baserelease 8
 %global fedora_build %{baserelease}
 
 # base_sublevel is the kernel version we're starting with and patching
@@ -2163,6 +2163,37 @@ fi
 # and build.
 
 %changelog
+* Wed Nov 16 2011 joe jiang <joejiang@linpus.com> - 3.1.1-8
+- update to 3.1.1 kernel
+
+-* Wed Nov 09 2011 root - 3.1.0-7
+- add btusb.c and atkbd.c patch
+
+* Tue Nov 08 2011 marstian@linpus.com - 3.1.0-6
+- add linpus-bootup-message-remove.patch to remove bootup messages
+
+* Thu Nov 03 2011 joe jiang <joejiang@linpus.com> - 3.1.0-5
+- add Patch linpus-atl1e.patch
+- add Patch linpus-ideapad.patch
+- add Patch linpus-sp5100_tco.patch
+
+* Wed Nov 02 2011 marstian@linpus.com - 3.1.0-4
+- add patch linpus-intel_lvds_kernel_patch.diff for drivers-add backlight_ctrl.ko
+
+* Thu Oct 27 2011 joe jiang <joejiang@linpus.com> - 3.1.0-3
+- atkbd.h
+
+* Wed Oct 26 2011 joejiang@linpus.com - 3.1.0-2
+- update atkbd.c
+- add linpus-bootup-messages.patch
+- add NTFS support
+- cover acer-wmi.c instead of use patch
+- patch ideapad-laptop.c, add patch for bcm build dependence(used
+  in driver-add package)
+- patch netlink.h , atkbd.h
+- add linpus-asus-wmi_for_hotkey.patch
+- add linpus-asus-wmi_for_hotkey.patch
+
 * Fri Nov 11 2011 Josh Boyer <jwboyer@redhat.com> 3.1.1-1
 - Linux 3.1.1
 
