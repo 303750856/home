@@ -51,7 +51,7 @@ Summary: The Linux kernel
 # For non-released -rc kernels, this will be prepended with "0.", so
 # for example a 3 here will become 0.3
 #
-%global baserelease 1
+%global baserelease 7
 %global fedora_build %{baserelease}
 
 # base_sublevel is the kernel version we're starting with and patching
@@ -105,6 +105,8 @@ Summary: The Linux kernel
 %define with_smp       %{?_without_smp:       0} %{?!_without_smp:       1}
 # kernel-PAE (only valid for i686)
 %define with_pae       %{?_without_pae:       0} %{?!_without_pae:       1}
+# linpus-Mars kernel-PAEdebug (only valid for PAE, PAE must be select) marstian
+%define with_paedebug  %{?_without_paedebug:  0} %{?!_without_paedebug:  1}
 # kernel-debug
 %define with_debug     %{?_without_debug:     0} %{?!_without_debug:     1}
 # kernel-doc
@@ -192,7 +194,7 @@ Summary: The Linux kernel
 
 %define make_target bzImage
 
-%define KVERREL %{version}-%{release}.%{_target_cpu}
+%define KVERREL 3.1.0.%{_target_cpu}
 %define hdrarch %_target_cpu
 %define asmarch %_target_cpu
 
@@ -442,6 +444,11 @@ Summary: The Linux kernel
 %if %{with_pae}
 %define with_pae_debug %{with_debug}
 %endif
+##marstian
+%if %{with_paedebug}  
+%define with_pae_debug 1  
+%endif
+##marstian end
 
 # Architectures we build tools/cpupower on
 %define cpupowerarchs %{ix86} x86_64 ppc ppc64
@@ -592,6 +599,8 @@ Source1000: config-local
 # Sources for kernel-tools
 Source2000: cpupower.service
 Source2001: cpupower.config
+#linpus source add
+Source3001: linpus-acer-wmi.c
 
 # Here should be only the patches up to the upstream canonical Linus tree.
 
@@ -766,6 +775,23 @@ Patch21080: sysfs-msi-irq-per-device.patch
 #backport brcm80211 from 3.2-rc1
 Patch21090: brcm80211.patch
 Patch21091: bcma-brcmsmac-compat.patch
+#linpus mars start patch
+Patch30000: linpus-netlink.patch
+Patch30001: linpus-atkbd.patch
+Patch30002: linpus-ideapad-laptop.patch
+Patch30005: linpus-bcm-build-dep.patch
+Patch30006: linpus-asus-wmi_for_hotkey.patch
+Patch30007: linpus-bootup-messages.patch
+Patch30008: linpus-atkbd-2.patch
+Patch30010: linpus-intel_lvds_kernel_patch.diff
+#joe
+Patch30011: linpus-atl1e.patch
+Patch30012: linpus-ideapad-2.patch
+Patch30013: linpus-sp5100_tco.patch
+Patch30014: linpus-bootup-message-remove.patch
+Patch30015: linpus-atkbd-mike.patch
+Patch30016: linpus-btusb.patch
+
 
 %endif
 
@@ -1413,6 +1439,25 @@ ApplyPatch brcm80211.patch
 # Remove overlap between bcma/b43 and brcmsmac and reenable bcm4331
 ApplyPatch bcma-brcmsmac-compat.patch
 
+#linpus mars start patch
+ApplyPatch linpus-netlink.patch
+ApplyPatch linpus-atkbd.patch
+ApplyPatch linpus-ideapad-laptop.patch
+ApplyPatch linpus-bcm-build-dep.patch  #build bcm wl.ko need this patch
+ApplyPatch linpus-asus-wmi_for_hotkey.patch  #asus-wmi hotkey support
+ApplyPatch linpus-bootup-messages.patch   #remove some garbage message at boot time
+ApplyPatch linpus-atkbd-2.patch
+ApplyPatch linpus-intel_lvds_kernel_patch.diff  #for drivers-add backlight_ctrl.ko
+#joe
+ApplyPatch linpus-atl1e.patch
+ApplyPatch linpus-ideapad-2.patch
+ApplyPatch linpus-sp5100_tco.patch
+ApplyPatch linpus-bootup-message-remove.patch
+ApplyPatch linpus-atkbd-mike.patch
+ApplyPatch linpus-btusb.patch
+
+cp -af %{SOURCE3001} drivers/platform/x86/acer-wmi.c  #linpus mars: cover this file because I can't maintain it. It write by tomson and leon.
+
 # END OF PATCH APPLICATIONS
 
 %endif
@@ -1512,8 +1557,10 @@ BuildKernel() {
       CopyKernel=cp
     fi
 
-    KernelVer=%{version}-%{release}.%{_target_cpu}${Flavour:+.${Flavour}}
+    KernelVer=3.1.0.%{_target_cpu}${Flavour:+.${Flavour}}
     echo BUILDING A KERNEL FOR ${Flavour} %{_target_cpu}...
+    #linpus mars
+    echo ${KernelVer} >	~/rpmbuild/SPECS/KernelVer 
 
     %if 0%{?stable_update}
     # make sure SUBLEVEL is incremented on a stable release.  Sigh 3.x.
@@ -1521,7 +1568,9 @@ BuildKernel() {
     %endif
 
     # make sure EXTRAVERSION says what we want it to say
-    perl -p -i -e "s/^EXTRAVERSION.*/EXTRAVERSION = -%{release}.%{_target_cpu}${Flavour:+.${Flavour}}/" Makefile
+    perl -p -i -e "s/^EXTRAVERSION.*/EXTRAVERSION = .%{_target_cpu}${Flavour:+.${Flavour}}/" Makefile
+    #mars linpus changed for keep kernel name
+    #perl -p -i -e "s/^EXTRAVERSION.*/EXTRAVERSION = -%{release}.%{_target_cpu}${Flavour:+.${Flavour}}/" Makefile
 
     # if pre-rc1 devel kernel, must fix up PATCHLEVEL for our versioning scheme
     %if !0%{?rcrev}
