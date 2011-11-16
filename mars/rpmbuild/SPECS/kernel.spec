@@ -51,7 +51,7 @@ Summary: The Linux kernel
 # For non-released -rc kernels, this will be prepended with "0.", so
 # for example a 3 here will become 0.3
 #
-%global baserelease 7
+%global baserelease 1
 %global fedora_build %{baserelease}
 
 # base_sublevel is the kernel version we're starting with and patching
@@ -63,7 +63,7 @@ Summary: The Linux kernel
 %if 0%{?released_kernel}
 
 # Do we have a -stable update to apply?
-%define stable_update 0
+%define stable_update 1
 # Is it a -stable RC?
 %define stable_rc 0
 # Set rpm version accordingly
@@ -105,8 +105,6 @@ Summary: The Linux kernel
 %define with_smp       %{?_without_smp:       0} %{?!_without_smp:       1}
 # kernel-PAE (only valid for i686)
 %define with_pae       %{?_without_pae:       0} %{?!_without_pae:       1}
-# linpus-Mars kernel-PAEdebug (only valid for PAE, PAE must be select) marstian
-%define with_paedebug  %{?_without_paedebug:  0} %{?!_without_paedebug:  1}
 # kernel-debug
 %define with_debug     %{?_without_debug:     0} %{?!_without_debug:     1}
 # kernel-doc
@@ -400,13 +398,13 @@ Summary: The Linux kernel
 # we build a up kernel on armv5tel. its used for qemu.
 %ifnarch armv5tel
 %define with_up 0
+%define with_perf 0
 %endif
 # we only build headers on the base arm arches
 # just like we used to only build them on i386 for x86
 %ifnarch armv5tel armv7hl
 %define with_headers 0
 %endif
-%define with_perf 0
 %endif
 
 %if %{nopatches}
@@ -444,11 +442,6 @@ Summary: The Linux kernel
 %if %{with_pae}
 %define with_pae_debug %{with_debug}
 %endif
-##marstian
-%if %{with_paedebug}  
-%define with_pae_debug 1  
-%endif
-##marstian end
 
 # Architectures we build tools/cpupower on
 %define cpupowerarchs %{ix86} x86_64 ppc ppc64
@@ -599,8 +592,6 @@ Source1000: config-local
 # Sources for kernel-tools
 Source2000: cpupower.service
 Source2001: cpupower.config
-#linpus source add
-Source3001: linpus-acer-wmi.c
 
 # Here should be only the patches up to the upstream canonical Linus tree.
 
@@ -673,6 +664,7 @@ Patch452: linux-2.6.30-no-pcspkr-modalias.patch
 Patch460: linux-2.6-serial-460800.patch
 
 Patch470: die-floppy-die.patch
+Patch471: floppy-drop-disable_hlt-warning.patch
 
 Patch510: linux-2.6-silence-noise.patch
 Patch530: linux-2.6-silence-fbcon-logo.patch
@@ -680,6 +672,9 @@ Patch530: linux-2.6-silence-fbcon-logo.patch
 Patch700: linux-2.6-e1000-ich9-montevina.patch
 
 Patch800: linux-2.6-crash-driver.patch
+
+# Platform
+Patch900: samsung-laptop-brightness-fixes-3.2.patch
 
 # crypto/
 
@@ -713,6 +708,8 @@ Patch2900: linux-2.6-v4l-dvb-update.patch
 Patch2901: linux-2.6-v4l-dvb-experimental.patch
 Patch2902: linux-2.6-v4l-dvb-uvcvideo-update.patch
 
+Patch2905: media-dib0700-correct-error-message.patch
+
 Patch3000: rcutree-avoid-false-quiescent-states.patch
 
 # fs fixes
@@ -725,27 +722,18 @@ Patch12010: add-appleir-usb-driver.patch
 Patch12016: disable-i8042-check-on-apple-mac.patch
 
 Patch12021: udlfb-bind-framebuffer-to-interface.patch
-Patch12022: x86-efi-Calling-__pa-with-an-ioremap-address-is-invalid.patch
 
-Patch12023: ums-realtek-driver-uses-stack-memory-for-DMA.patch
-Patch12024: epoll-fix-spurious-lockdep-warnings.patch
 Patch12025: rcu-avoid-just-onlined-cpu-resched.patch
 Patch12026: block-stray-block-put-after-teardown.patch
 Patch12027: usb-add-quirk-for-logitech-webcams.patch
-Patch12029: crypto-register-cryptd-first.patch
+Patch12030: epoll-limit-paths.patch
 
 Patch12303: dmar-disable-when-ricoh-multifunction.patch
 
 Patch13002: revert-efi-rtclock.patch
 Patch13003: efi-dont-map-boot-services-on-32bit.patch
 
-Patch13007: add-macbookair41-keyboard.patch
-
 Patch13009: hvcs_pi_buf_alloc.patch
-
-Patch13013: powerpc-Fix-deadlock-in-icswx-code.patch
-
-Patch13014: iwlagn-fix-ht_params-NULL-pointer-dereference.patch
 
 Patch20000: utrace.patch
 
@@ -753,30 +741,31 @@ Patch20000: utrace.patch
 Patch21000: arm-omap-dt-compat.patch
 Patch21001: arm-smsc-support-reading-mac-address-from-device-tree.patch
 
-#rhbz #722509
-Patch21002: mmc-Always-check-for-lower-base-frequency-quirk-for-.patch
-
 #rhbz #735946
 Patch21020: 0001-mm-vmscan-Limit-direct-reclaim-for-higher-order-allo.patch
 Patch21021: 0002-mm-Abort-reclaim-compaction-if-compaction-can-procee.patch
 
+#rhbz 748691
+Patch21030: be2net-non-member-vlan-pkts-not-received-in-promisco.patch
+Patch21031: benet-remove-bogus-unlikely-on-vlan-check.patch
 
-#linpus mars start patch
-Patch30000: linpus-netlink.patch
-Patch30001: linpus-atkbd.patch
-Patch30002: linpus-ideapad-laptop.patch
-Patch30005: linpus-bcm-build-dep.patch
-Patch30006: linpus-asus-wmi_for_hotkey.patch
-Patch30007: linpus-bootup-messages.patch
-Patch30008: linpus-atkbd-2.patch
-Patch30010: linpus-intel_lvds_kernel_patch.diff
-#joe
-Patch30011: linpus-atl1e.patch
-Patch30012: linpus-ideapad-2.patch
-Patch30013: linpus-sp5100_tco.patch
-Patch30014: linpus-bootup-message-remove.patch
-Patch30015: linpus-atkbd-mike.patch
-Patch30016: linpus-btusb.patch
+#rhbz 749166
+Patch21050: xfs-Fix-possible-memory-corruption-in-xfs_readlink.patch
+
+Patch21070: oom-fix-integer-overflow-of-points.patch
+
+#rhbz 728607
+Patch21060: elantech.patch
+
+#rhbz 748210
+Patch21061: ideapad-Check-if-acpi-already-handle-backlight.patch
+
+#rhbz752176
+Patch21080: sysfs-msi-irq-per-device.patch
+
+#backport brcm80211 from 3.2-rc1
+Patch21090: brcm80211.patch
+Patch21091: bcma-brcmsmac-compat.patch
 
 %endif
 
@@ -1273,6 +1262,7 @@ ApplyPatch linux-2.6-i386-nx-emulation.patch
 # ext4
 
 # xfs
+ApplyPatch xfs-Fix-possible-memory-corruption-in-xfs_readlink.patch
 
 # btrfs
 
@@ -1318,6 +1308,7 @@ ApplyPatch linux-2.6-input-kill-stupid-messages.patch
 
 # stop floppy.ko from autoloading during udev...
 ApplyPatch die-floppy-die.patch
+ApplyPatch floppy-drop-disable_hlt-warning.patch
 
 ApplyPatch linux-2.6.30-no-pcspkr-modalias.patch
 
@@ -1367,7 +1358,9 @@ ApplyPatch linux-2.6-silence-acpi-blacklist.patch
 ApplyOptionalPatch linux-2.6-v4l-dvb-fixes.patch
 ApplyOptionalPatch linux-2.6-v4l-dvb-update.patch
 ApplyOptionalPatch linux-2.6-v4l-dvb-experimental.patch
-#ApplyPatch linux-2.6-v4l-dvb-uvcvideo-update.patch
+
+# Platform fixes not sent for -stable
+ApplyPatch samsung-laptop-brightness-fixes-3.2.patch
 
 # Patches headed upstream
 ApplyPatch rcutree-avoid-false-quiescent-states.patch
@@ -1377,15 +1370,10 @@ ApplyPatch disable-i8042-check-on-apple-mac.patch
 ApplyPatch add-appleir-usb-driver.patch
 
 ApplyPatch udlfb-bind-framebuffer-to-interface.patch
-ApplyPatch ums-realtek-driver-uses-stack-memory-for-DMA.patch
-ApplyPatch epoll-fix-spurious-lockdep-warnings.patch
+ApplyPatch epoll-limit-paths.patch
 ApplyPatch rcu-avoid-just-onlined-cpu-resched.patch
 ApplyPatch block-stray-block-put-after-teardown.patch
 ApplyPatch usb-add-quirk-for-logitech-webcams.patch
-
-ApplyPatch crypto-register-cryptd-first.patch
-
-ApplyPatch x86-efi-Calling-__pa-with-an-ioremap-address-is-invalid.patch
 
 # rhbz#605888
 ApplyPatch dmar-disable-when-ricoh-multifunction.patch
@@ -1393,16 +1381,9 @@ ApplyPatch dmar-disable-when-ricoh-multifunction.patch
 ApplyPatch revert-efi-rtclock.patch
 ApplyPatch efi-dont-map-boot-services-on-32bit.patch
 
-ApplyPatch add-macbookair41-keyboard.patch
-
 ApplyPatch hvcs_pi_buf_alloc.patch
 
-ApplyPatch powerpc-Fix-deadlock-in-icswx-code.patch
-
-ApplyPatch iwlagn-fix-ht_params-NULL-pointer-dereference.patch
-
-#rhbz #722509
-ApplyPatch mmc-Always-check-for-lower-base-frequency-quirk-for-.patch
+ApplyPatch media-dib0700-correct-error-message.patch
 
 # utrace.
 ApplyPatch utrace.patch
@@ -1411,24 +1392,26 @@ ApplyPatch utrace.patch
 ApplyPatch 0001-mm-vmscan-Limit-direct-reclaim-for-higher-order-allo.patch
 ApplyPatch 0002-mm-Abort-reclaim-compaction-if-compaction-can-procee.patch
 
-#linpus mars start patch
-ApplyPatch linpus-netlink.patch
-ApplyPatch linpus-atkbd.patch
-ApplyPatch linpus-ideapad-laptop.patch
-ApplyPatch linpus-bcm-build-dep.patch  #build bcm wl.ko need this patch
-ApplyPatch linpus-asus-wmi_for_hotkey.patch  #asus-wmi hotkey support
-ApplyPatch linpus-bootup-messages.patch   #remove some garbage message at boot time
-ApplyPatch linpus-atkbd-2.patch
-ApplyPatch linpus-intel_lvds_kernel_patch.diff  #for drivers-add backlight_ctrl.ko
-#joe
-ApplyPatch linpus-atl1e.patch
-ApplyPatch linpus-ideapad-2.patch
-ApplyPatch linpus-sp5100_tco.patch
-ApplyPatch linpus-bootup-message-remove.patch
-ApplyPatch linpus-atkbd-mike.patch
-ApplyPatch linpus-btusb.patch
+#rhbz 748691
+ApplyPatch be2net-non-member-vlan-pkts-not-received-in-promisco.patch
+ApplyPatch benet-remove-bogus-unlikely-on-vlan-check.patch
 
-cp -af %{SOURCE3001} drivers/platform/x86/acer-wmi.c  #linpus mars: cover this file because I can't maintain it. It write by tomson and leon.
+#rhbz 750402
+ApplyPatch oom-fix-integer-overflow-of-points.patch
+
+#rhbz 728607
+ApplyPatch elantech.patch
+
+#rhbz 748210
+ApplyPatch ideapad-Check-if-acpi-already-handle-backlight.patch
+
+#rhbz 752176
+ApplyPatch sysfs-msi-irq-per-device.patch
+
+#backport brcm80211 from 3.2-rc1
+ApplyPatch brcm80211.patch
+# Remove overlap between bcma/b43 and brcmsmac and reenable bcm4331
+ApplyPatch bcma-brcmsmac-compat.patch
 
 # END OF PATCH APPLICATIONS
 
@@ -1531,8 +1514,6 @@ BuildKernel() {
 
     KernelVer=%{version}-%{release}.%{_target_cpu}${Flavour:+.${Flavour}}
     echo BUILDING A KERNEL FOR ${Flavour} %{_target_cpu}...
-    #linpus mars
-    echo ${KernelVer} >	~/rpmbuild/SPECS/KernelVer 
 
     %if 0%{?stable_update}
     # make sure SUBLEVEL is incremented on a stable release.  Sigh 3.x.
@@ -1540,9 +1521,7 @@ BuildKernel() {
     %endif
 
     # make sure EXTRAVERSION says what we want it to say
-    perl -p -i -e "s/^EXTRAVERSION.*/EXTRAVERSION = .%{_target_cpu}${Flavour:+.${Flavour}}/" Makefile
-    #mars linpus changed for keep kernel name
-    #perl -p -i -e "s/^EXTRAVERSION.*/EXTRAVERSION = -%{release}.%{_target_cpu}${Flavour:+.${Flavour}}/" Makefile
+    perl -p -i -e "s/^EXTRAVERSION.*/EXTRAVERSION = -%{release}.%{_target_cpu}${Flavour:+.${Flavour}}/" Makefile
 
     # if pre-rc1 devel kernel, must fix up PATCHLEVEL for our versioning scheme
     %if !0%{?rcrev}
@@ -2135,32 +2114,74 @@ fi
 # and build.
 
 %changelog
-* Wed Nov 09 2011 root - 3.1.0-7
-- add btusb.c and atkbd.c patch
+* Fri Nov 11 2011 Josh Boyer <jwboyer@redhat.com> 3.1.1-1
+- Linux 3.1.1
 
-* Tue Nov 08 2011 marstian@linpus.com - 3.1.0-6
-- add linpus-bootup-message-remove.patch to remove bootup messages
+* Fri Nov 11 2011 John W. Linville <linville@redhat.com>
+- Remove overlap between bcma/b43 and brcmsmac and reenable bcm4331
 
-* Thu Nov 03 2011 joe jiang <joejiang@linpus.com> - 3.1.0-5
-- add Patch linpus-atl1e.patch
-- add Patch linpus-ideapad.patch
-- add Patch linpus-sp5100_tco.patch
+* Thu Nov 10 2011 Chuck Ebbert <cebbert@redhat.com>
+- Sync samsung-laptop driver with what's in 3.2 (rhbz 747560)
 
-* Wed Nov 02 2011 marstian@linpus.com - 3.1.0-4
-- add patch linpus-intel_lvds_kernel_patch.diff for drivers-add backlight_ctrl.ko
+* Wed Nov 09 2011 Chuck Ebbert <cebbert@redhat.com> 3.1.1-1.rc1
+- Linux 3.1.1-rc1
+- Comment out merged patches, will drop when release is final:
+   ums-realtek-driver-uses-stack-memory-for-DMA.patch
+   epoll-fix-spurious-lockdep-warnings.patch
+   crypto-register-cryptd-first.patch
+   add-macbookair41-keyboard.patch
+   powerpc-Fix-deadlock-in-icswx-code.patch
+   iwlagn-fix-ht_params-NULL-pointer-dereference.patch
+   mmc-Always-check-for-lower-base-frequency-quirk-for-.patch
+   media-DiBcom-protect-the-I2C-bufer-access.patch
+   media-dib0700-protect-the-dib0700-buffer-access.patch
+   WMI-properly-cleanup-devices-to-avoid-crashes.patch
+   mac80211-fix-remain_off_channel-regression.patch
+   mac80211-config-hw-when-going-back-on-channel.patch
 
-* Thu Oct 27 2011 joe jiang <joejiang@linpus.com> - 3.1.0-3
-- atkbd.h
+* Wed Nov 09 2011 John W. Linville <linville@redhat.com>
+- Backport brcm80211 from 3.2-rc1
 
-* Wed Oct 26 2011 joejiang@linpus.com - 3.1.0-2
-- update atkbd.c
-- add linpus-bootup-messages.patch
-- add NTFS support
-- cover acer-wmi.c instead of use patch
-- patch ideapad-laptop.c, add patch for bcm build dependence(used
-  in driver-add package)
-- patch netlink.h , atkbd.h
-- add linpus-asus-wmi_for_hotkey.patch
+* Tue Nov 08 2011 Neil Horman <nhorman@redhat.com>
+- Add msi irq ennumeration per device in sysfs (rhbz 752176)
+
+* Mon Nov 07 2011 Josh Boyer <jwboyer@redhat.com>
+- Add two patches to fix mac80211 issues (rhbz 731365)
+
+* Thu Nov 03 2011 Josh Boyer <jwboyer@redhat.com>
+- Add commits queued for 3.2 for elantech driver (rhbz 728607)
+- Fix crash when setting brightness via Fn keys on ideapads (rhbz 748210)
+
+* Wed Nov 02 2011 Josh Boyer <jwboyer@redhat.com>
+- Add patch to fix oops when removing wmi module (rhbz 706574)
+
+* Tue Nov 01 2011 Dave Jones <davej@redhat.com> 3.1.0-8
+- allow building the perf rpm for ARM (rhbz 741325)
+
+* Tue Nov 01 2011 Dave Jones <davej@redhat.com> 3.1.0-8
+- Add another Sony laptop to the nonvs blacklist. (rhbz 641789)
+
+* Tue Nov  1 2011 Josh Boyer <jwboyer@redhat.com> 3.1.0-7
+- Drop x86-efi-Calling-__pa-with-an-ioremap-address-is-invalid (rhbz 748516)
+
+* Mon Oct 31 2011 Josh Boyer <jwboyer@redhat.com>
+- CVE-2011-4097: oom_badness() integer overflow (rhbz 750402)
+
+* Fri Oct 28 2011 Josh Boyer <jwboyer@redhat.com>
+- Add patch to prevent tracebacks on a warning in floppy.c (rhbz 749887)
+
+* Wed Oct 26 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.1.0-5
+- Rebuilt for glibc bug#747377
+
+* Wed Oct 26 2011 Josh Boyer <jwboyer@redhat.com>
+- CVE-2011-4077: xfs: potential buffer overflow in xfs_readlink() (rhbz 749166)
+
+* Tue Oct 25 2011 Josh Boyer <jwboyer@redhat.com>
+- CVE-2011-3347: be2net: promiscuous mode and non-member VLAN packets DoS (rhbz 748691)
+- CVE-2011-1083: excessive in kernel CPU consumption when creating large nested epoll structures (rhbz 748668)
+
+* Mon Oct 24 2011 Josh Boyer <jwboyer@redhat.com>
+- Backport 3 fixed from linux-next to fix dib0700 playback (rhbz 733827)
 
 * Mon Oct 24 2011 Chuck Ebbert <cebbert@redhat.com> 3.1.0-1
 - Linux 3.1
